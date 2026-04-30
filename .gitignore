@@ -1,0 +1,13 @@
+node_modules/
+app/node_modules/
+
+.terraform/
+**/.terraform/*
+*.tfstate
+*.tfstate.backup
+crash.log
+
+.DS_Store
+.env
+.env.*
+*.log
