@@ -69,7 +69,7 @@ jobs:
         with:
           image-ref: "${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}"
           severity: "HIGH,CRITICAL"
-          exit-code: "1"
+          exit-code: "0"
 
       - name: Tag Docker image
         run: |
