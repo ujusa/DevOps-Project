@@ -1,0 +1,6 @@
+.gradle/
+build/
+python/__pycache__/
+python/northwind.db
+user_outputs.json
+evaluation_report.json

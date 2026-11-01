@@ -1,0 +1,166 @@
+[
+  {
+    "id": "q01",
+    "question": "How many customers are there in total?",
+    "script": "result = len(nw_api.get_customers())",
+    "ok": true,
+    "result": 20,
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q02",
+    "question": "How many customers are based in Germany?",
+    "script": "result = len(nw_api.get_customers(country='Germany'))",
+    "ok": true,
+    "result": 4,
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q03",
+    "question": "How many distinct customers placed at least one order in 1997?",
+    "script": "import sqlite3\n...",
+    "ok": false,
+    "result": null,
+    "error": "Violation: import of 'sqlite3' is not allowed",
+    "attempts": 1
+  },
+  {
+    "id": "q04",
+    "question": "How many orders have not been shipped yet?",
+    "script": "result = sum(1 for o in nw_api.get_orders() if o['ShippedDate'] is None)",
+    "ok": true,
+    "result": 15,
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q05",
+    "question": "List the names of all discontinued products.",
+    "script": "result = sorted(p['ProductName'] for p in nw_api.get_products(discontinued=True))",
+    "ok": true,
+    "result": [
+      "Singaporean Hokkien Fried Mee",
+      "Chef Anton's Gumbo Mix",
+      "Alice Mutton"
+    ],
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q06",
+    "question": "Which countries do our suppliers come from?",
+    "script": "result = sorted({s['Country'] for s in nw_api.get_suppliers()})",
+    "ok": true,
+    "result": [
+      "Australia",
+      "Canada",
+      "Germany",
+      "Italy",
+      "Japan",
+      "Norway",
+      "UK",
+      "USA"
+    ],
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q07",
+    "question": "What is the most expensive product?",
+    "script": "result = max(nw_api.get_products(), key=lambda p: p['UnitPrice'])['ProductName']",
+    "ok": true,
+    "result": "Cote de Blaye",
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q08",
+    "question": "What was the total revenue (after discounts) in 1997?",
+    "script": "ids = {o['OrderID'] for o in nw_api.get_orders(start_date='1997-01-01', end_date='1997-12-31')}\nresult = round(sum(d['UnitPrice'] * d['Quantity'] * (1 - d['Discount'])\n                   for d in nw_api.get_order_details() if d['OrderID'] in ids), 2)",
+    "ok": true,
+    "result": 361234.1,
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q09",
+    "question": "Which product category generated the most revenue in 1997?",
+    "script": "from collections import defaultdict\nids = {o['OrderID'] for o in nw_api.get_orders(start_date='1997-01-01', end_date='1997-12-31')}\ncat_of = {p['ProductID']: p['CategoryID'] for p in nw_api.get_products()}\nnames = {c['CategoryID']: c['CategoryName'] for c in nw_api.get_categories()}\nrev = defaultdict(float)\nfor d in nw_api.get_order_details():\n    if d['OrderID'] in ids:\n        rev[cat_of[d['ProductID']]] += d['UnitPrice'] * d['Quantity'] * (1 - d['Discount'])\nresult = names[max(rev, key=rev.get)]",
+    "ok": true,
+    "result": [
+      "beverages"
+    ],
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q10",
+    "question": "Which employee (full name) handled the most orders?",
+    "script": "from collections import Counter\nc = Counter(o['EmployeeID'] for o in nw_api.get_orders())\nemp = {e['EmployeeID']: e['FirstName'] + ' ' + e['LastName'] for e in nw_api.get_employees()}\nresult = emp[c.most_common(1)[0][0]]",
+    "ok": false,
+    "result": null,
+    "error": "KeyError: 'Name'",
+    "attempts": 1
+  },
+  {
+    "id": "q11",
+    "question": "How many orders did each shipper deliver? Return shipper name -> count.",
+    "script": "from collections import Counter\nc = Counter(o['ShipVia'] for o in nw_api.get_orders())\nresult = {s['CompanyName']: c.get(s['ShipperID'], 0) for s in nw_api.get_shippers()}",
+    "ok": true,
+    "result": {
+      "Speedy Express": 128,
+      "United Package": 136,
+      "Federal Shipping": 136
+    },
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q12",
+    "question": "What is the average freight cost per order, rounded to 2 decimals?",
+    "script": "orders = nw_api.get_orders()\nresult = round(sum(o['Freight'] for o in orders) / len(orders), 2)",
+    "ok": true,
+    "result": "148.46",
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q13",
+    "question": "Who are the top 3 customers (company name) by number of orders?",
+    "script": "from collections import Counter\nc = Counter(o['CustomerID'] for o in nw_api.get_orders())\nnames = {x['CustomerID']: x['CompanyName'] for x in nw_api.get_customers()}\nresult = [names[cid] for cid, _ in sorted(c.items(), key=lambda kv: (-kv[1], kv[0]))[:3]]",
+    "ok": true,
+    "result": [
+      "Great Lakes Food Market",
+      "Antonio Moreno Taqueria",
+      "Save-a-lot Markets"
+    ],
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q14",
+    "question": "Which employees report directly to Andrew Fuller? Give full names.",
+    "script": "emps = nw_api.get_employees()\nboss = next(e['EmployeeID'] for e in emps if e['FirstName'] == 'Andrew' and e['LastName'] == 'Fuller')\nresult = sorted(e['FirstName'] + ' ' + e['LastName'] for e in emps if e['ReportsTo'] == boss)",
+    "ok": true,
+    "result": [
+      "Janet Leverling",
+      "Laura Callahan",
+      "Margaret Peacock",
+      "Nancy Davolio",
+      "Steven Buchanan"
+    ],
+    "error": null,
+    "attempts": 1
+  },
+  {
+    "id": "q15",
+    "question": "How many units of 'Chai' have been sold in total?",
+    "script": "pid = next(p['ProductID'] for p in nw_api.get_products() if p['ProductName'] == 'Chai')\nresult = sum(d['Quantity'] for d in nw_api.get_order_details(product_id=pid))",
+    "ok": true,
+    "result": 1198,
+    "error": null,
+    "attempts": 1
+  }
+]
