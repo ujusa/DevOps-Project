@@ -1,0 +1,38 @@
+plugins { id 'java' }
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+
+repositories { mavenCentral() }
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.11.0'
+    testImplementation platform('org.junit:junit-bom:5.11.3')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    workingDir = projectDir
+    testLogging { events 'passed', 'failed', 'skipped'; exceptionFormat 'full' }
+}
+
+def argList = { project.findProperty('appArgs')?.toString()?.trim()?.split(/\s+/)?.findAll { it } ?: [] }
+
+tasks.register('generateOutputs', JavaExec) {
+    group = 'application'
+    description = 'Generate scripts with the LLM for every ground-truth question -> user_outputs.json'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'ScriptGenerator'
+    workingDir = projectDir
+    args = argList()
+}
+
+tasks.register('evaluate', JavaExec) {
+    group = 'application'
+    description = 'Score user_outputs.json against ground_truth.json'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'Evaluate'
+    workingDir = projectDir
+    args = argList()
+}
